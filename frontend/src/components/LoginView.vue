@@ -1,8 +1,8 @@
 <template>
   <div class="login-page">
     <form class="login-card" @submit.prevent="handleSubmit">
-      <h1>skyharp-3d</h1>
-      <p class="subtitle">Sign in to explore the map</p>
+      <h1>Revibed Space Voyage</h1>
+      <!-- <p class="subtitle">Sign in to explore the map</p> -->
 
       <label>
         Username
