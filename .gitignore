@@ -7,4 +7,3 @@ dist/
 data-pipeline/tracks-raw.json
 data-pipeline/tracks-with-coords.json
 data-pipeline/manifest.json
-backend/data/manifest.json
