@@ -1,0 +1,55 @@
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data-dev:/data/db
+    networks:
+      - internal
+
+  backend:
+    image: node:20-slim
+    working_dir: /app
+    command: sh -c "npm install && npm run dev"
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+      ALLOWED_ORIGIN: http://localhost:5555
+    ports:
+      - '4001:4001'
+    volumes:
+      - ./backend:/app
+      - backend-node-modules:/app/node_modules
+    networks:
+      - internal
+    depends_on:
+      - mongo
+
+  frontend:
+    image: node:20-slim
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5555"
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://localhost:4001/api
+    ports:
+      - '5555:5555'
+    volumes:
+      - ./frontend:/app
+      - frontend-node-modules:/app/node_modules
+    networks:
+      - internal
+    depends_on:
+      - backend
+
+networks:
+  internal:
+
+volumes:
+  mongo-data-dev:
+  backend-node-modules:
+  frontend-node-modules:

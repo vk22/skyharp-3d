@@ -14,7 +14,11 @@ export const playerState = reactive({
   duration: 0,
   // Ids of tracks played before the current one, most recent last - lets
   // prev() step back through the actual listening path.
-  history: [] as string[]
+  history: [] as string[],
+  // Every track actually played this session, in order, deduped only for
+  // immediate repeats - drawn as a connecting line on the map. In-memory
+  // only, so it clears on page reload.
+  trail: [] as string[]
 })
 
 export const currentTrack = computed(() =>
@@ -79,6 +83,10 @@ export async function playIndex(index: number) {
       playerState.loading = false
       playerState.duration = howl?.duration() || 0
       startSeekTimer()
+
+      if (playerState.trail[playerState.trail.length - 1] !== track.id) {
+        playerState.trail.push(track.id)
+      }
     },
     onpause: () => {
       playerState.playing = false
@@ -156,10 +164,10 @@ export async function next() {
   const from = currentTrack.value
   if (!from) return
 
-  // Exclude the track we just came from so next() can't immediately bounce
-  // back to it when it's also the closest point to the current track.
-  const predecessor = playerState.history[playerState.history.length - 1]
-  const excludeIds = predecessor ? new Set([predecessor]) : new Set<string>()
+  // Exclude every track already played this session (not just the
+  // immediate predecessor) so next() always "flies" somewhere new instead
+  // of bouncing between a handful of mutually-nearest tracks.
+  const excludeIds = new Set(playerState.trail)
 
   const index = nearestIndex(from, excludeIds)
   if (index === -1) return

@@ -1,11 +1,11 @@
 <template>
   <section class="map-page">
     <header class="page-header">
-      <h1>skyharp-3d</h1>
+      <h1>Revibed Space Voyage</h1>
       <div class="header-actions">
-        <button type="button" class="ghost-button" :disabled="loading" @click="loadPoints">
+        <!-- <button type="button" class="ghost-button" :disabled="loading" @click="loadPoints">
           {{ loading ? 'Loading…' : 'Reload' }}
-        </button>
+        </button> -->
         <button type="button" class="ghost-button" @click="handleLogout">Log out</button>
       </div>
     </header>
@@ -42,12 +42,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import { Line2 } from 'three/examples/jsm/lines/Line2.js'
+import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js'
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 import { fetchTracks, UnauthorizedError, type Track } from '../lib/api'
 import { clearToken } from '../lib/auth'
-import { playTrack as playTrackInPlayer, setTracks } from '../lib/player'
+import { playerState, playTrack as playTrackInPlayer, setTracks } from '../lib/player'
 import PlayerBar from './PlayerBar.vue'
 
 const emit = defineEmits<{ 'logged-out': [] }>()
@@ -66,6 +69,7 @@ const CLUSTER_COLORS: Record<string, string> = {
 }
 const DEFAULT_COLOR = '#999999'
 const CLOUD_SPAN = 20
+const TRAIL_LINE_WIDTH = 2 // pixels
 
 const containerRef = ref<HTMLDivElement | null>(null)
 const loading = ref(false)
@@ -115,10 +119,12 @@ let scene: THREE.Scene | undefined
 let camera: THREE.PerspectiveCamera | undefined
 let controls: OrbitControls | undefined
 let pointCloud: THREE.Points | undefined
+let trailLine: Line2 | undefined
 let raycaster: THREE.Raycaster | undefined
 let animationFrame = 0
 let container: HTMLDivElement | undefined
 let renderedPoints: Track[] = []
+let plottedPositionById = new Map<string, THREE.Vector3>()
 
 function initScene() {
   if (!containerRef.value) return
@@ -184,6 +190,18 @@ function buildPointCloud() {
   const span = Math.max(maxX - minX, maxY - minY, maxZ - minZ, 1)
   const scale = CLOUD_SPAN / span
 
+  plottedPositionById = new Map(
+    points.value.map((point) => [
+      point.id,
+      new THREE.Vector3(
+        (point.x - centerX) * scale,
+        (point.y - centerY) * scale,
+        (point.z - centerZ) * scale
+      )
+    ])
+  )
+  buildTrailLine()
+
   renderedPoints = visiblePoints.value
   if (!renderedPoints.length) return
 
@@ -214,6 +232,39 @@ function buildPointCloud() {
 
   pointCloud = new THREE.Points(geometry, material)
   scene.add(pointCloud)
+}
+
+function buildTrailLine() {
+  if (!scene || !renderer || !container) return
+
+  if (trailLine) {
+    scene.remove(trailLine)
+    trailLine.geometry.dispose()
+    ;(trailLine.material as LineMaterial).dispose()
+    trailLine = undefined
+  }
+
+  const vertices = playerState.trail
+    .map((id) => plottedPositionById.get(id))
+    .filter((v): v is THREE.Vector3 => v !== undefined)
+
+  if (vertices.length < 2) return
+
+  const positions = vertices.flatMap((v) => [v.x, v.y, v.z])
+  const geometry = new LineGeometry()
+  geometry.setPositions(positions)
+
+  const material = new LineMaterial({
+    color: 0xe5e5e5,
+    linewidth: TRAIL_LINE_WIDTH,
+    transparent: true,
+    opacity: 0.5
+  })
+  material.resolution.set(container.clientWidth, container.clientHeight)
+
+  trailLine = new Line2(geometry, material)
+  trailLine.computeLineDistances()
+  scene.add(trailLine)
 }
 
 function raycastPoint(clientX: number, clientY: number): Track | null {
@@ -297,6 +348,7 @@ function onResize() {
   camera.aspect = width / height
   camera.updateProjectionMatrix()
   renderer.setSize(width, height)
+  if (trailLine) (trailLine.material as LineMaterial).resolution.set(width, height)
 }
 
 function animate() {
@@ -329,6 +381,11 @@ function handleLogout() {
   emit('logged-out')
 }
 
+watch(
+  () => playerState.trail.length,
+  () => buildTrailLine()
+)
+
 onMounted(() => {
   initScene()
   loadPoints()
@@ -345,6 +402,8 @@ onBeforeUnmount(() => {
   }
   pointCloud?.geometry.dispose()
   ;(pointCloud?.material as THREE.Material | undefined)?.dispose()
+  trailLine?.geometry.dispose()
+  ;(trailLine?.material as LineMaterial | undefined)?.dispose()
   renderer?.dispose()
 })
 </script>

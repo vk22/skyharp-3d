@@ -1,7 +1,15 @@
 <template>
   <div class="player-bar">
     <div class="transport">
-      <button type="button" class="icon-button" :disabled="!hasHistory" title="Previous" @click="prev">⏮</button>
+      <button
+        type="button"
+        class="icon-button"
+        :disabled="!hasHistory"
+        title="Previous"
+        @click="prev"
+      >
+        ⏮
+      </button>
       <button
         type="button"
         class="icon-button play-button"
@@ -9,20 +17,34 @@
         :title="playerState.playing ? 'Pause' : 'Play'"
         @click="toggle"
       >
-        {{ playerState.loading ? '…' : playerState.playing ? '⏸' : '▶' }}
+        {{ playerState.loading ? "…" : playerState.playing ? "⏸" : "▶" }}
       </button>
-      <button type="button" class="icon-button" :disabled="!hasTrack" title="Next" @click="next">⏭</button>
+      <button
+        type="button"
+        class="icon-button"
+        :disabled="!hasTrack"
+        title="Next"
+        @click="next"
+      >
+        ⏭
+      </button>
     </div>
 
     <div class="track-info">
-      <strong v-if="currentTrack">{{ currentTrack.title || currentTrack.id }}</strong>
+      <strong v-if="currentTrack">{{
+        currentTrack.title || currentTrack.id
+      }}</strong>
       <strong v-else class="placeholder">No track playing</strong>
       <span v-if="currentTrack?.artist">{{ currentTrack.artist }}</span>
     </div>
 
     <div class="seek">
       <span class="time">{{ formatTime(playerState.seek) }}</span>
-      <div class="seek-bar" :class="{ disabled: !hasTrack }" @click="onSeekClick">
+      <div
+        class="seek-bar"
+        :class="{ disabled: !hasTrack }"
+        @click="onSeekClick"
+      >
         <div class="seek-bar-fill" :style="{ width: `${seekPercent}%` }"></div>
       </div>
       <span class="time">{{ formatTime(playerState.duration) }}</span>
@@ -42,33 +64,41 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { currentTrack, next, playerState, prev, seekTo, setVolume, toggle } from '../lib/player'
+import { computed } from "vue";
+import {
+  currentTrack,
+  next,
+  playerState,
+  prev,
+  seekTo,
+  setVolume,
+  toggle,
+} from "../lib/player";
 
-const hasTrack = computed(() => !!currentTrack.value)
-const hasHistory = computed(() => playerState.history.length > 0)
+const hasTrack = computed(() => !!currentTrack.value);
+const hasHistory = computed(() => playerState.history.length > 0);
 
 const seekPercent = computed(() => {
-  if (!playerState.duration) return 0
-  return (playerState.seek / playerState.duration) * 100
-})
+  if (!playerState.duration) return 0;
+  return (playerState.seek / playerState.duration) * 100;
+});
 
 function onSeekClick(event: MouseEvent) {
-  if (!hasTrack.value) return
-  const el = event.currentTarget as HTMLElement
-  const rect = el.getBoundingClientRect()
-  seekTo((event.clientX - rect.left) / rect.width)
+  if (!hasTrack.value) return;
+  const el = event.currentTarget as HTMLElement;
+  const rect = el.getBoundingClientRect();
+  seekTo((event.clientX - rect.left) / rect.width);
 }
 
 function onVolumeInput(event: Event) {
-  setVolume(Number((event.target as HTMLInputElement).value))
+  setVolume(Number((event.target as HTMLInputElement).value));
 }
 
 function formatTime(seconds: number): string {
-  if (!Number.isFinite(seconds) || seconds < 0) return '0:00'
-  const mins = Math.floor(seconds / 60)
-  const secs = Math.floor(seconds % 60)
-  return `${mins}:${String(secs).padStart(2, '0')}`
+  if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${String(secs).padStart(2, "0")}`;
 }
 </script>
 
@@ -81,7 +111,7 @@ function formatTime(seconds: number): string {
   height: 4.5rem;
   margin-top: 1rem;
   padding: 0 1rem;
-  border: 1px solid #26262a;
+  /* border: 1px solid #26262a; */
   border-radius: 10px;
   background: #17171a;
 }
@@ -96,13 +126,13 @@ function formatTime(seconds: number): string {
 .icon-button {
   display: grid;
   place-items: center;
-  width: 2.1rem;
-  height: 2.1rem;
+  width: 2.75rem;
+  height: 2.75rem;
   border: 0;
   border-radius: 50%;
   background: transparent;
   color: #e5e5e5;
-  font-size: 0.9rem;
+  font-size: 1.25rem;
   cursor: pointer;
 }
 
@@ -116,14 +146,14 @@ function formatTime(seconds: number): string {
 }
 
 .play-button {
-  width: 2.6rem;
-  height: 2.6rem;
-  background: #4c6ef5;
-  color: #fff;
+  width: 2.5rem;
+  height: 2.5rem;
+  background: #efefef;
+  color: #222;
 }
 
 .play-button:hover:not(:disabled) {
-  background: #3b5bdb;
+  background: rgb(165, 165, 165);
 }
 
 .track-info {
@@ -185,16 +215,20 @@ function formatTime(seconds: number): string {
 .seek-bar-fill {
   height: 100%;
   border-radius: 999px;
-  background: #4c6ef5;
+  background: #f50;
 }
 
 .volume {
   flex: 0 0 auto;
   width: 6rem;
+  align-items: center;
+  justify-content: center;
+  display: flex;
 
-  input[type='range'] {
+  input[type="range"] {
     width: 100%;
-    accent-color: #4c6ef5;
+    accent-color: #d9d9d9;
+    height: 4px;
   }
 }
 </style>
