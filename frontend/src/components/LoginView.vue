@@ -1,7 +1,7 @@
 <template>
   <div class="login-page">
     <form class="login-card" @submit.prevent="handleSubmit">
-      <h1>Revibed Space Voyage</h1>
+      <h1>Space Voyage</h1>
       <!-- <p class="subtitle">Sign in to explore the map</p> -->
 
       <label>
@@ -17,7 +17,7 @@
       <div v-if="error" class="error">{{ error }}</div>
 
       <button type="submit" :disabled="loading">
-        {{ loading ? 'Signing in…' : 'Sign in' }}
+        {{ loading ? 'Loging in…' : 'Login' }}
       </button>
     </form>
   </div>
@@ -71,8 +71,10 @@ async function handleSubmit() {
 
 h1 {
   margin: 0;
-  font-size: 1.4rem;
+  font-size: 1.25rem;
   color: #fff;
+  padding: 1rem 0;
+  font-weight: 400;;
   text-align: center;
 }
 
@@ -108,8 +110,8 @@ button {
   padding: 0.6rem;
   border: 0;
   border-radius: 7px;
-  background: #4c6ef5;
-  color: #fff;
+  background: #ebebeb;
+  color: #111;
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
