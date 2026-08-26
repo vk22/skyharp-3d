@@ -427,8 +427,8 @@ onBeforeUnmount(() => {
   margin-bottom: 1rem;
 
   h1 {
-    font-size: 1.15rem;
-    font-weight: 700;
+    font-size: .9rem;
+    font-weight: 400;
     color: #fff;
   }
 }
